@@ -7,30 +7,64 @@
 <style>
   body {
     margin: 0;
-    font-family: sans-serif;
+    font-family: "Segoe UI", "Hiragino Kaku Gothic ProN", sans-serif;
     background: #f7f7f7;
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 1rem;
   }
-  h1 {
-    font-size: 1.4rem;
-    margin-bottom: 0.5rem;
+
+  /* ==== お題見出し ==== */
+  #topic {
+    position: relative;
+    margin: 1rem 0 1.2rem;
+    padding: 1rem 2rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
     text-align: center;
+    text-transform: none;
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    border-radius: 12px;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+    letter-spacing: 1px;
   }
+  /* 角の装飾 */
+  #topic::before,
+  #topic::after {
+    content: "";
+    position: absolute;
+    width: 40px;
+    height: 4px;
+    background: #fff;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.8;
+  }
+  #topic::before {
+    left: -20px;
+    border-radius: 2px 0 0 2px;
+  }
+  #topic::after {
+    right: -20px;
+    border-radius: 0 2px 2px 0;
+  }
+
   #timer {
     font-size: 1.2rem;
     margin-bottom: 1rem;
     color: #e53935;
     font-weight: bold;
   }
+
   #drawCanvas {
     background: #fff;
     border: 2px solid #ccc;
     border-radius: 8px;
-    touch-action: none; /* 描画用キャンバスだけスクロール禁止 */
+    touch-action: none;
   }
+
   #preview {
     margin-top: 1rem;
     width: 320px;
@@ -39,26 +73,27 @@
     border-radius: 8px;
     object-fit: contain;
     background: #fff;
-    display: none;       /* ★初期は非表示 */
+    display: none;
   }
+
   p.note {
     margin-top: 1rem;
     font-size: 0.9rem;
     color: #555;
     text-align: center;
-    display: none;       /* ★初期は非表示 */
+    display: none;
   }
 </style>
 </head>
 <body>
 
-<!-- ===== お題はここを編集するだけ ===== -->
+<!-- ==== お題 ==== -->
 <h1 id="topic"></h1>
 
 <div id="timer">残り 45 秒</div>
 <canvas id="drawCanvas" width="320" height="320"></canvas>
 
-<!-- ★ 制限時間終了後に表示される領域 -->
+<!-- 制限時間後に表示 -->
 <p class="note" id="saveNote">
   ★描いた絵を保存したいときは、下の画像を<strong>長押し</strong>してください。
 </p>
@@ -68,7 +103,7 @@
 /* ===========================
    ★ お題を変更する場所
    =========================== */
-const TOPIC = "食パンマンが飛んでいる様子"; // ←ここを書き換えるだけ
+const TOPIC = "食パンマンが飛んでいる様子"; // ←ここを変えればお題変更OK
 document.getElementById('topic').textContent = `お題：${TOPIC}`;
 
 /* ======== 描画関連 ======== */
@@ -142,7 +177,7 @@ const timer = setInterval(() => {
     canvas.removeEventListener('mouseleave', end);
     canvas.removeEventListener('touchend', end);
 
-    // ★保存用画像とメッセージを表示
+    // 保存用画像とメッセージを表示
     previewImg.src = canvas.toDataURL('image/png');
     previewImg.style.display = 'block';
     saveNote.style.display = 'block';
