@@ -25,14 +25,23 @@
     color: #e53935;
     font-weight: bold;
   }
-  canvas {
+  #drawCanvas {
     background: #fff;
     border: 2px solid #ccc;
     border-radius: 8px;
-    touch-action: none; /* スマホでのスクロール防止 */
+    touch-action: none; /* 描画用キャンバスだけスクロール禁止 */
+  }
+  #preview {
+    margin-top: 1rem;
+    width: 320px;
+    height: 320px;
+    border: 2px solid #aaa;
+    border-radius: 8px;
+    object-fit: contain;
+    background: #fff;
   }
   p.note {
-    margin-top: 1rem;
+    margin-top: 0.5rem;
     font-size: 0.9rem;
     color: #555;
     text-align: center;
@@ -47,9 +56,12 @@
 <div id="timer">残り 45 秒</div>
 <canvas id="drawCanvas" width="320" height="320"></canvas>
 
+<!-- ★ ここが保存対象の画像 -->
+<img id="preview" alt="描いた画像がここに表示されます">
+
 <p class="note">
   ★描いた絵を保存したいときは、<br>
-  キャンバスを<strong>長押し</strong>して保存してください。<br>
+  下の画像を<strong>長押し</strong>してください。<br>
   （保存ボタンはありません）
 </p>
 
@@ -60,25 +72,17 @@
 const TOPIC = "食パンマンが飛んでいる様子"; // ←ここを書き換えるだけ
 document.getElementById('topic').textContent = `お題：${TOPIC}`;
 
-/* ======== 変数 ======== */
+/* ======== 描画関連 ======== */
 const canvas = document.getElementById('drawCanvas');
 const ctx = canvas.getContext('2d');
-let drawing = false;
-let timeLeft = 45; // 秒
+const previewImg = document.getElementById('preview');
 
-/* ======== 描画設定 ======== */
+let drawing = false;
+let timeLeft = 40; // 秒
+
 ctx.lineWidth = 4;
 ctx.lineCap = "round";
 ctx.strokeStyle = "#000";
-
-/* ======== イベント ======== */
-canvas.addEventListener('mousedown', start);
-canvas.addEventListener('touchstart', start, {passive: false});
-canvas.addEventListener('mousemove', draw);
-canvas.addEventListener('touchmove', draw, {passive: false});
-canvas.addEventListener('mouseup', end);
-canvas.addEventListener('mouseleave', end);
-canvas.addEventListener('touchend', end);
 
 function getPos(e) {
   if (e.touches) {
@@ -106,13 +110,27 @@ function draw(e) {
   const pos = getPos(e);
   ctx.lineTo(pos.x, pos.y);
   ctx.stroke();
+  updatePreview();
 }
 
-function end(e) {
-  if (!drawing) return;
+function end() {
   drawing = false;
   ctx.closePath();
+  updatePreview();
 }
+
+function updatePreview() {
+  // Canvas内容を画像に反映
+  previewImg.src = canvas.toDataURL('image/png');
+}
+
+canvas.addEventListener('mousedown', start);
+canvas.addEventListener('touchstart', start, {passive: false});
+canvas.addEventListener('mousemove', draw);
+canvas.addEventListener('touchmove', draw, {passive: false});
+canvas.addEventListener('mouseup', end);
+canvas.addEventListener('mouseleave', end);
+canvas.addEventListener('touchend', end);
 
 /* ======== タイマー ======== */
 const timerEl = document.getElementById('timer');
@@ -122,7 +140,7 @@ const timer = setInterval(() => {
   if (timeLeft <= 0) {
     clearInterval(timer);
     timerEl.textContent = "時間終了！";
-    // 時間終了後は描けないようにイベント解除
+    // 描画停止
     canvas.removeEventListener('mousedown', start);
     canvas.removeEventListener('touchstart', start);
     canvas.removeEventListener('mousemove', draw);
@@ -132,6 +150,9 @@ const timer = setInterval(() => {
     canvas.removeEventListener('touchend', end);
   }
 }, 1000);
+
+// 初期プレビュー
+updatePreview();
 </script>
 
 </body>
