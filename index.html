@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Drawing Challenge</title>
 <style>
   body {
@@ -15,7 +15,43 @@
     padding: 1rem;
   }
 
-  /* ==== お題見出し ==== */
+  /* ---- ユーザー名入力画面 ---- */
+  #startScreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 4rem;
+  }
+  #startScreen input {
+    font-size: 1.2rem;
+    padding: 0.4rem 0.6rem;
+    border: 2px solid #888;
+    border-radius: 6px;
+    width: 200px;
+    text-align: center;
+  }
+  #startScreen button {
+    font-size: 1.2rem;
+    padding: 0.5rem 1.2rem;
+    background: #2575fc;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  #startScreen button:hover {
+    background: #1250c9;
+  }
+
+  /* ---- 描画画面 ---- */
+  #drawingArea {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
   #topic {
     position: relative;
     margin: 1rem 0 1.2rem;
@@ -24,13 +60,11 @@
     font-weight: 700;
     color: #fff;
     text-align: center;
-    text-transform: none;
     background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
     border-radius: 12px;
     box-shadow: 0 6px 14px rgba(0,0,0,0.2);
     letter-spacing: 1px;
   }
-  /* 角の装飾 */
   #topic::before,
   #topic::after {
     content: "";
@@ -42,14 +76,8 @@
     transform: translateY(-50%);
     opacity: 0.8;
   }
-  #topic::before {
-    left: -20px;
-    border-radius: 2px 0 0 2px;
-  }
-  #topic::after {
-    right: -20px;
-    border-radius: 0 2px 2px 0;
-  }
+  #topic::before { left: -20px; border-radius: 2px 0 0 2px; }
+  #topic::after  { right: -20px; border-radius: 0 2px 2px 0; }
 
   #timer {
     font-size: 1.2rem;
@@ -87,38 +115,68 @@
 </head>
 <body>
 
-<!-- ==== お題 ==== -->
-<h1 id="topic"></h1>
+<!-- ====== ユーザー名入力画面 ====== -->
+<div id="startScreen">
+  <h1>お絵かきチャレンジ</h1>
+  <p>お名前を入力してスタートしてください</p>
+  <input type="text" id="usernameInput" placeholder="名前を入力">
+  <button id="startBtn">スタート</button>
+</div>
 
-<div id="timer">残り 45 秒</div>
-<canvas id="drawCanvas" width="320" height="320"></canvas>
-
-<!-- 制限時間後に表示 -->
-<p class="note" id="saveNote">
-  ★描いた絵を保存したいときは、下の画像を<strong>長押し</strong>してください。
-</p>
-<img id="preview" alt="描いた画像がここに表示されます">
+<!-- ====== 描画画面 ====== -->
+<div id="drawingArea">
+  <h1 id="topic"></h1>
+  <div id="timer">残り 30 秒</div>
+  <canvas id="drawCanvas" width="320" height="320"></canvas>
+  <p class="note" id="saveNote">
+    ★描いた絵を保存したいときは、下の画像を<strong>長押し</strong>してください。
+  </p>
+  <img id="preview" alt="描いた画像がここに表示されます">
+</div>
 
 <script>
 /* ===========================
    ★ お題を変更する場所
    =========================== */
 const TOPIC = "食パンマンが飛んでいる様子"; // ←ここを変えればお題変更OK
-document.getElementById('topic').textContent = `お題：${TOPIC}`;
 
-/* ======== 描画関連 ======== */
+/* ---- 要素取得 ---- */
+const startScreen = document.getElementById('startScreen');
+const drawingArea = document.getElementById('drawingArea');
+const startBtn = document.getElementById('startBtn');
+const usernameInput = document.getElementById('usernameInput');
+
+const topicEl = document.getElementById('topic');
+const timerEl = document.getElementById('timer');
 const canvas = document.getElementById('drawCanvas');
 const ctx = canvas.getContext('2d');
 const previewImg = document.getElementById('preview');
 const saveNote = document.getElementById('saveNote');
 
 let drawing = false;
-let timeLeft = 45; // 秒
-
+let timeLeft = 30; // ★ 制限時間 30 秒
 ctx.lineWidth = 4;
 ctx.lineCap = "round";
 ctx.strokeStyle = "#000";
 
+/* ---- 名前入力後にスタート ---- */
+startBtn.addEventListener('click', () => {
+  const name = usernameInput.value.trim();
+  if (!name) {
+    alert("名前を入力してください");
+    return;
+  }
+  startScreen.style.display = 'none';
+  drawingArea.style.display = 'flex';
+  topicEl.textContent = `お題：${TOPIC}`;
+  // キャンバスに名前を書き込む（左上）
+  ctx.font = "20px 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif";
+  ctx.fillStyle = "#444";
+  ctx.fillText(name, 10, 25);
+  startTimer();
+});
+
+/* ---- 描画処理 ---- */
 function getPos(e) {
   if (e.touches) {
     const rect = canvas.getBoundingClientRect();
@@ -131,14 +189,13 @@ function getPos(e) {
   }
 }
 
-function start(e) {
+function startDraw(e) {
   e.preventDefault();
   drawing = true;
   const pos = getPos(e);
   ctx.beginPath();
   ctx.moveTo(pos.x, pos.y);
 }
-
 function draw(e) {
   if (!drawing) return;
   e.preventDefault();
@@ -146,44 +203,44 @@ function draw(e) {
   ctx.lineTo(pos.x, pos.y);
   ctx.stroke();
 }
-
-function end() {
+function endDraw() {
   drawing = false;
   ctx.closePath();
 }
 
-canvas.addEventListener('mousedown', start);
-canvas.addEventListener('touchstart', start, {passive: false});
+canvas.addEventListener('mousedown', startDraw);
+canvas.addEventListener('touchstart', startDraw, {passive: false});
 canvas.addEventListener('mousemove', draw);
 canvas.addEventListener('touchmove', draw, {passive: false});
-canvas.addEventListener('mouseup', end);
-canvas.addEventListener('mouseleave', end);
-canvas.addEventListener('touchend', end);
+canvas.addEventListener('mouseup', endDraw);
+canvas.addEventListener('mouseleave', endDraw);
+canvas.addEventListener('touchend', endDraw);
 
-/* ======== タイマー ======== */
-const timerEl = document.getElementById('timer');
-const timer = setInterval(() => {
-  timeLeft--;
-  timerEl.textContent = `残り ${timeLeft} 秒`;
-  if (timeLeft <= 0) {
-    clearInterval(timer);
-    timerEl.textContent = "時間終了！";
-    // 描画停止
-    canvas.removeEventListener('mousedown', start);
-    canvas.removeEventListener('touchstart', start);
-    canvas.removeEventListener('mousemove', draw);
-    canvas.removeEventListener('touchmove', draw);
-    canvas.removeEventListener('mouseup', end);
-    canvas.removeEventListener('mouseleave', end);
-    canvas.removeEventListener('touchend', end);
+/* ---- タイマー ---- */
+function startTimer() {
+  const timer = setInterval(() => {
+    timeLeft--;
+    timerEl.textContent = `残り ${timeLeft} 秒`;
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      timerEl.textContent = "時間終了！";
 
-    // 保存用画像とメッセージを表示
-    previewImg.src = canvas.toDataURL('image/png');
-    previewImg.style.display = 'block';
-    saveNote.style.display = 'block';
-  }
-}, 1000);
+      // 描画禁止
+      canvas.removeEventListener('mousedown', startDraw);
+      canvas.removeEventListener('touchstart', startDraw);
+      canvas.removeEventListener('mousemove', draw);
+      canvas.removeEventListener('touchmove', draw);
+      canvas.removeEventListener('mouseup', endDraw);
+      canvas.removeEventListener('mouseleave', endDraw);
+      canvas.removeEventListener('touchend', endDraw);
+
+      // 保存用画像とメッセージを表示
+      previewImg.src = canvas.toDataURL('image/png');
+      previewImg.style.display = 'block';
+      saveNote.style.display = 'block';
+    }
+  }, 1000);
+}
 </script>
-
 </body>
 </html>
