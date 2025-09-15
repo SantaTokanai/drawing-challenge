@@ -101,6 +101,18 @@
     text-align: center;
     display: none;
   }
+  #sendBtn {
+    display: none;
+    margin-top: 1rem;
+    font-size: 1rem;
+    padding: 0.5rem 1.2rem;
+    background: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  #sendBtn:hover { background: #1e7e34; }
 </style>
 </head>
 <body>
@@ -119,11 +131,12 @@
     ★描いた絵を保存したいときは、下の画像を<strong>長押し</strong>してください。
   </p>
   <img id="preview" alt="描いた画像がここに表示されます">
+  <button id="sendBtn">この画像を送信</button>
 </div>
 
-<!-- 自動アップロードフォーム -->
-<form id="uploadForm" action="https://formspree.io/f/meolwkqw" method="POST" enctype="multipart/form-data" style="display:none;">
-  <input type="file" name="image" id="imageInput" accept="image/*">
+<!-- Formspree送信用 -->
+<form id="uploadForm" action="https://formspree.io/f/meolwkqw" method="POST">
+  <textarea name="imageData" id="imageData" style="display:none;"></textarea>
 </form>
 
 <script>
@@ -138,6 +151,8 @@ const canvas = document.getElementById('drawCanvas');
 const ctx = canvas.getContext('2d');
 const previewImg = document.getElementById('preview');
 const saveNote = document.getElementById('saveNote');
+const sendBtn = document.getElementById('sendBtn');
+const imageData = document.getElementById('imageData');
 
 let drawing = false;
 let timeLeft = 30;
@@ -193,31 +208,22 @@ function startTimer() {
       canvas.removeEventListener('touchend', endDraw);
 
       // プレビュー表示
-      const dataURL = canvas.toDataURL('image/png');
-      previewImg.src = dataURL;
+      previewImg.src = canvas.toDataURL('image/png');
       previewImg.style.display = 'block';
       saveNote.style.display = 'block';
 
-      // 自動アップロード
-      function dataURLtoFile(dataurl, filename) {
-        const arr = dataurl.split(',');
-        const mime = arr[0].match(/:(.*?);/)[1];
-        const bstr = atob(arr[1]);
-        let n = bstr.length;
-        const u8arr = new Uint8Array(n);
-        while(n--) { u8arr[n] = bstr.charCodeAt(n); }
-        return new File([u8arr], filename, {type:mime});
-      }
-
-      const file = dataURLtoFile(dataURL, 'drawing.png');
-      const fileInput = document.getElementById('imageInput');
-      const dt = new DataTransfer();
-      dt.items.add(file);
-      fileInput.files = dt.files;
-      document.getElementById('uploadForm').submit();
+      // 送信ボタン表示
+      sendBtn.style.display = 'block';
     }
   }, 1000);
 }
+
+// 送信ボタン処理
+sendBtn.addEventListener('click', () => {
+  imageData.value = previewImg.src; // Base64をセット
+  document.getElementById('uploadForm').submit();
+  alert("画像を送信しました！");
+});
 </script>
 </body>
 </html>
