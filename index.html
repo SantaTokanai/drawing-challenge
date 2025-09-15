@@ -1,149 +1,138 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>30秒お絵描きチャレンジ</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Drawing Challenge</title>
 <style>
-:root{
-  --accent:#f95d5d;
-  --bg:#fafafa;
-}
-body{
-  margin:0;
-  background:var(--bg);
-  font-family: system-ui, sans-serif;
-  text-align:center;
-}
-header{
-  background:var(--accent);
-  color:#fff;
-  padding:16px;
-  font-weight:700;
-  font-size:1.2rem;
-}
-#timer{
-  margin:12px 0;
-  font-size:1.5rem;
-  color:#333;
-}
-#drawArea{
-  border:2px solid #ccc;
-  border-radius:8px;
-  background:#fff;
-  touch-action:none; /* タッチ描画用 */
-}
-.buttons{
-  margin:16px 0;
-  display:flex;
-  justify-content:center;
-  gap:16px;
-}
-button{
-  padding:10px 18px;
-  border:none;
-  border-radius:8px;
-  font-weight:700;
-  background:#333;
-  color:#fff;
-  cursor:pointer;
-}
-button:disabled{
-  opacity:0.5;
-  cursor:not-allowed;
-}
+  body {
+    margin: 0;
+    font-family: sans-serif;
+    background: #f7f7f7;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+  }
+  h1 {
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+    text-align: center;
+  }
+  #timer {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #e53935;
+    font-weight: bold;
+  }
+  canvas {
+    background: #fff;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    touch-action: none; /* スマホでのスクロール防止 */
+  }
+  p.note {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #555;
+    text-align: center;
+  }
 </style>
 </head>
 <body>
 
-<!-- ★ ここがお題：この文字を好きに変えるだけでOK -->
-<header id="topic"></header>
+<!-- ===== お題はここを編集するだけ ===== -->
+<h1 id="topic"></h1>
 
-<div id="timer">残り30秒</div>
-<canvas id="drawArea" width="360" height="480"></canvas>
+<div id="timer">残り 45 秒</div>
+<canvas id="drawCanvas" width="320" height="320"></canvas>
 
-<div class="buttons">
-  <button id="clearBtn">やり直し</button>
-  <button id="saveBtn" disabled>保存</button>
-</div>
+<p class="note">
+  ★描いた絵を保存したいときは、<br>
+  キャンバスを<strong>長押し</strong>して保存してください。<br>
+  （保存ボタンはありません）
+</p>
 
 <script>
-//======================
-// ★ お題変更はここ！
-//======================
-const TOPIC = "食パンマンが飛んでいる様子"; // ←この文字列を変えるだけ
-
+/* ===========================
+   ★ お題を変更する場所
+   =========================== */
+const TOPIC = "食パンマンが飛んでいる様子"; // ←ここを書き換えるだけ
 document.getElementById('topic').textContent = `お題：${TOPIC}`;
 
-// タイマー設定
-let timeLeft = 30; // 秒
-const timerEl = document.getElementById('timer');
-const countdown = setInterval(()=>{
-  timeLeft--;
-  timerEl.textContent = `残り${timeLeft}秒`;
-  if(timeLeft <= 0){
-    clearInterval(countdown);
-    endDrawing();
-  }
-},1000);
-
-// 描画関連
-const canvas = document.getElementById('drawArea');
+/* ======== 変数 ======== */
+const canvas = document.getElementById('drawCanvas');
 const ctx = canvas.getContext('2d');
-ctx.lineWidth = 4;
-ctx.lineCap = 'round';
-ctx.lineJoin = 'round';
-ctx.strokeStyle = '#000';
-
 let drawing = false;
+let timeLeft = 45; // 秒
 
-function startDraw(e){
-  drawing = true;
-  ctx.beginPath();
-  ctx.moveTo(getX(e), getY(e));
+/* ======== 描画設定 ======== */
+ctx.lineWidth = 4;
+ctx.lineCap = "round";
+ctx.strokeStyle = "#000";
+
+/* ======== イベント ======== */
+canvas.addEventListener('mousedown', start);
+canvas.addEventListener('touchstart', start, {passive: false});
+canvas.addEventListener('mousemove', draw);
+canvas.addEventListener('touchmove', draw, {passive: false});
+canvas.addEventListener('mouseup', end);
+canvas.addEventListener('mouseleave', end);
+canvas.addEventListener('touchend', end);
+
+function getPos(e) {
+  if (e.touches) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: e.touches[0].clientX - rect.left,
+      y: e.touches[0].clientY - rect.top
+    };
+  } else {
+    return { x: e.offsetX, y: e.offsetY };
+  }
 }
-function draw(e){
-  if(!drawing) return;
-  ctx.lineTo(getX(e), getY(e));
+
+function start(e) {
+  e.preventDefault();
+  drawing = true;
+  const pos = getPos(e);
+  ctx.beginPath();
+  ctx.moveTo(pos.x, pos.y);
+}
+
+function draw(e) {
+  if (!drawing) return;
+  e.preventDefault();
+  const pos = getPos(e);
+  ctx.lineTo(pos.x, pos.y);
   ctx.stroke();
 }
-function endDraw(){
+
+function end(e) {
+  if (!drawing) return;
   drawing = false;
-}
-function getX(e){return (e.touches? e.touches[0].clientX : e.clientX) - canvas.getBoundingClientRect().left;}
-function getY(e){return (e.touches? e.touches[0].clientY : e.clientY) - canvas.getBoundingClientRect().top;}
-
-canvas.addEventListener('mousedown', startDraw);
-canvas.addEventListener('mousemove', draw);
-canvas.addEventListener('mouseup', endDraw);
-canvas.addEventListener('mouseleave', endDraw);
-
-canvas.addEventListener('touchstart', e=>{e.preventDefault();startDraw(e);});
-canvas.addEventListener('touchmove', e=>{e.preventDefault();draw(e);});
-canvas.addEventListener('touchend', e=>{e.preventDefault();endDraw();});
-
-// 30秒経過後
-function endDrawing(){
-  canvas.removeEventListener('mousedown', startDraw);
-  canvas.removeEventListener('mousemove', draw);
-  canvas.removeEventListener('touchstart', startDraw);
-  canvas.removeEventListener('touchmove', draw);
-  document.getElementById('saveBtn').disabled = false;
-  timerEl.textContent = "時間終了！保存できます";
+  ctx.closePath();
 }
 
-// クリア
-document.getElementById('clearBtn').addEventListener('click',()=>{
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-});
-
-// 保存
-document.getElementById('saveBtn').addEventListener('click',()=>{
-  const link = document.createElement('a');
-  link.download = 'drawing.png';
-  link.href = canvas.toDataURL('image/png');
-  link.click();
-});
+/* ======== タイマー ======== */
+const timerEl = document.getElementById('timer');
+const timer = setInterval(() => {
+  timeLeft--;
+  timerEl.textContent = `残り ${timeLeft} 秒`;
+  if (timeLeft <= 0) {
+    clearInterval(timer);
+    timerEl.textContent = "時間終了！";
+    // 時間終了後は描けないようにイベント解除
+    canvas.removeEventListener('mousedown', start);
+    canvas.removeEventListener('touchstart', start);
+    canvas.removeEventListener('mousemove', draw);
+    canvas.removeEventListener('touchmove', draw);
+    canvas.removeEventListener('mouseup', end);
+    canvas.removeEventListener('mouseleave', end);
+    canvas.removeEventListener('touchend', end);
+  }
+}, 1000);
 </script>
+
 </body>
 </html>
