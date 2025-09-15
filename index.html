@@ -39,12 +39,14 @@
     border-radius: 8px;
     object-fit: contain;
     background: #fff;
+    display: none;       /* ★初期は非表示 */
   }
   p.note {
-    margin-top: 0.5rem;
+    margin-top: 1rem;
     font-size: 0.9rem;
     color: #555;
     text-align: center;
+    display: none;       /* ★初期は非表示 */
   }
 </style>
 </head>
@@ -53,17 +55,14 @@
 <!-- ===== お題はここを編集するだけ ===== -->
 <h1 id="topic"></h1>
 
-<div id="timer">残り 40 秒</div>
+<div id="timer">残り 45 秒</div>
 <canvas id="drawCanvas" width="320" height="320"></canvas>
 
-<!-- ★ ここが保存対象の画像 -->
-<img id="preview" alt="描いた画像がここに表示されます">
-
-<p class="note">
-  ★描いた絵を保存したいときは、<br>
-  下の画像を<strong>長押し</strong>してください。<br>
-  （保存ボタンはありません）
+<!-- ★ 制限時間終了後に表示される領域 -->
+<p class="note" id="saveNote">
+  ★描いた絵を保存したいときは、下の画像を<strong>長押し</strong>してください。
 </p>
+<img id="preview" alt="描いた画像がここに表示されます">
 
 <script>
 /* ===========================
@@ -76,9 +75,10 @@ document.getElementById('topic').textContent = `お題：${TOPIC}`;
 const canvas = document.getElementById('drawCanvas');
 const ctx = canvas.getContext('2d');
 const previewImg = document.getElementById('preview');
+const saveNote = document.getElementById('saveNote');
 
 let drawing = false;
-let timeLeft = 40; // 秒
+let timeLeft = 45; // 秒
 
 ctx.lineWidth = 4;
 ctx.lineCap = "round";
@@ -110,18 +110,11 @@ function draw(e) {
   const pos = getPos(e);
   ctx.lineTo(pos.x, pos.y);
   ctx.stroke();
-  updatePreview();
 }
 
 function end() {
   drawing = false;
   ctx.closePath();
-  updatePreview();
-}
-
-function updatePreview() {
-  // Canvas内容を画像に反映
-  previewImg.src = canvas.toDataURL('image/png');
 }
 
 canvas.addEventListener('mousedown', start);
@@ -148,11 +141,13 @@ const timer = setInterval(() => {
     canvas.removeEventListener('mouseup', end);
     canvas.removeEventListener('mouseleave', end);
     canvas.removeEventListener('touchend', end);
+
+    // ★保存用画像とメッセージを表示
+    previewImg.src = canvas.toDataURL('image/png');
+    previewImg.style.display = 'block';
+    saveNote.style.display = 'block';
   }
 }, 1000);
-
-// 初期プレビュー
-updatePreview();
 </script>
 
 </body>
