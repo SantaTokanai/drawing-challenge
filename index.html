@@ -131,10 +131,11 @@
   <h1 id="topic"></h1>
   <div id="timer">残り 30 秒</div>
   <canvas id="drawCanvas" width="320" height="320"></canvas>
-  <p class="note" id="saveNote">
-    ★宜しければ<strong>下↓↓↓の画像</strong>を<strong>長押し</strong>で保存して、枠内アイコンにして皆さんに見せてくださいꉂ🤭
-  </p>
   <img id="preview" alt="描いた画像がここに表示されます">
+  <p class="note" id="saveNote">
+    ★長押しすると保存できます。<br>
+    良かったら枠内アイコンに設定して皆さんにも見せてください。
+  </p>
 </div>
 
 <script>
@@ -237,10 +238,11 @@ function startTimer() {
       canvas.removeEventListener('mouseleave', endDraw);
       canvas.removeEventListener('touchend', endDraw);
 
-      // 保存用画像とメッセージを表示
+      // ---- 画像切り替え ----
       previewImg.src = canvas.toDataURL('image/png');
       previewImg.style.display = 'block';
-      saveNote.style.display = 'block';
+      canvas.style.display = 'none';     // ★キャンバスを隠す
+      saveNote.style.display = 'block';  // ★メッセージを表示
     }
   }, 1000);
 }
