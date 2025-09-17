@@ -7,11 +7,11 @@
 <style>
   body {
     margin:0;
-    padding:40px;               /* 余白をやや広めに */
+    padding:40px;
     display:flex;
     flex-direction:column;
     align-items:center;
-    background:#f0fff0;          /* 緑系 */
+    background:#f0fff0;
     font-family:'Segoe UI','Hiragino Kaku Gothic ProN',sans-serif;
   }
 
@@ -22,10 +22,9 @@
     color:#2e7d32;
   }
 
-  /* お題枠：初期は非表示 */
   #topic {
     display:none;
-    margin:10px 0 4px;           /* ↓ 残り秒数との間をさらに狭く */
+    margin:10px 0 4px;
     padding:12px 24px;
     font-size:1.5rem;
     font-weight:bold;
@@ -81,28 +80,41 @@
     margin-top:20px;
   }
 
-  /* ↓ 残り時間は赤色 */
   #timer { margin:4px 0; font-size:1.2rem; color:#d32f2f; }
 
-  canvas {
+  /* キャンバスを包むコンテナで固定サイズを保つ */
+  .canvas-wrapper {
+    position:relative;
     border:1px solid #388e3c;
     background:white;
+  }
+  canvas {
+    display:block;
     touch-action:none;
-    max-width:90vw;              /* できるだけ大きく正方形 */
+    max-width:90vw;
     max-height:90vw;
+  }
+
+  /* 終了後に重ねるプレビューオーバーレイ */
+  #overlay {
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:white;
+    display:none;
+    justify-content:center;
+    align-items:center;
+  }
+  #overlay img {
+    max-width:100%;
+    max-height:100%;
   }
 
   #resetBtn {
     margin-top:10px;
     background:#e74c3c;
-  }
-
-  #preview {
-    display:none;
-    max-width:90%;
-    margin-top:12px;
-    border:1px solid #ccc;
-    background:white;            /* 制限時間後も背景白 */
   }
 
   .note {
@@ -111,7 +123,7 @@
     font-size:14px;
     color:#333;
     text-align:center;
-    padding:0 24px;              /* 左右余白を広めに */
+    padding:0 24px;
   }
 </style>
 </head>
@@ -128,9 +140,14 @@
 
   <div id="drawSection">
     <div id="timer">残り 30 秒</div>
-    <canvas id="canvas"></canvas>
+
+    <!-- キャンバスとオーバーレイを同じラッパーに -->
+    <div class="canvas-wrapper" id="canvasWrap">
+      <canvas id="canvas"></canvas>
+      <div id="overlay"><img id="preview" alt="完成画像"></div>
+    </div>
+
     <button id="resetBtn">リセット</button>
-    <img id="preview" alt="完成画像">
     <p class="note" id="saveNote">
       ★長押しすると保存できます。<br>
       枠内アイコンの設定ができる皆さんは、良かったら一時的に枠内アイコンに設定して皆さんに見せてくださいꉂ🤭
@@ -138,7 +155,7 @@
   </div>
 
 <script>
-const startBtn  = document.getElementById('startBtn');
+const startBtn   = document.getElementById('startBtn');
 const nicknameForm = document.getElementById('nicknameForm');
 const drawSection  = document.getElementById('drawSection');
 const canvas   = document.getElementById('canvas');
@@ -149,6 +166,8 @@ const saveNote = document.getElementById('saveNote');
 const resetBtn = document.getElementById('resetBtn');
 const awayMsg  = document.getElementById('awayMsg');
 const topicEl  = document.getElementById('topic');
+const overlay  = document.getElementById('overlay');
+const canvasWrap = document.getElementById('canvasWrap');
 
 let drawing = false;
 let timeLeft = 30;
@@ -162,6 +181,8 @@ function resizeCanvas() {
   const size = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.6);
   canvas.width = size;
   canvas.height = size;
+  canvasWrap.style.width = size + "px";
+  canvasWrap.style.height = size + "px";
 }
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
@@ -180,9 +201,9 @@ function draw(e) {
   const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
   const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
 
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 3; // ★線の太さを少し細く
   ctx.lineCap = 'round';
-  ctx.strokeStyle = '#000'; // 黒色
+  ctx.strokeStyle = '#000';
   ctx.lineTo(x, y);
   ctx.stroke();
   ctx.beginPath();
@@ -205,10 +226,9 @@ function startTimer() {
       canvas.removeEventListener('mouseleave', endDraw);
       canvas.removeEventListener('touchend', endDraw);
 
-      // 背景白のまま画像化
+      // 同じサイズのオーバーレイを表示して統一
       previewImg.src = canvas.toDataURL('image/png');
-      previewImg.style.display = 'block';
-      canvas.style.display = 'none';
+      overlay.style.display = 'flex';
       saveNote.style.display = 'block';
       resetBtn.style.display = 'none'; // 時間後はリセット非表示
     }
@@ -225,7 +245,7 @@ function drawNickname() {
   ctx.font = "20px sans-serif";
   ctx.fillStyle = "#000";
   ctx.textBaseline = "top";
-  ctx.fillText(nickname, 10, 10);   // 左上に表示
+  ctx.fillText(nickname, 10, 10);
   ctx.restore();
 }
 
