@@ -24,22 +24,22 @@
 
   /* ★ お題枠：可愛らしいデザイン ★ */
   #topic {
-    display:none;
+    display:none;                 /* ← 初期は非表示 */
     margin:10px 0 4px;
     padding:16px 28px;
-    font-size:1.5rem;                /* 大きさそのまま */
+    font-size:1.5rem;
     font-weight:bold;
-    color:#444;                      /* はっきりした文字色 */
+    color:#444;                   /* はっきり見える文字色 */
     background:
       radial-gradient(circle at 10px 10px, rgba(255,255,255,0.6) 1px, transparent 1px),
       radial-gradient(circle at 30px 30px, rgba(255,255,255,0.6) 1px, transparent 1px),
-      linear-gradient(135deg, #ffe6f0 0%, #c8f7ff 100%); /* パステルピンク〜ブルー */
+      linear-gradient(135deg, #ffe6f0 0%, #c8f7ff 100%);
     background-size:40px 40px,40px 40px,100% 100%;
-    border-radius:24px;               /* 角を大きく丸く */
+    border-radius:24px;
     box-shadow:0 6px 14px rgba(0,0,0,0.15);
     text-align:center;
     position: relative;
-    border: 3px dotted #fff;          /* ドットで可愛さアップ */
+    border: 3px dotted #fff;
   }
   #topic::before,
   #topic::after {
@@ -55,12 +55,218 @@
   #topic::before { left: -25px; }
   #topic::after  { right: -25px; }
 
-  /* 以降は前回コードと同じなので省略 */
+  #nicknameForm {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    margin-top:20px;
+  }
+  input[type="text"] {
+    padding:8px 12px;
+    font-size:16px;
+    margin-bottom:10px;
+    border:1px solid #4caf50;
+    border-radius:6px;
+  }
+  button {
+    padding:8px 16px;
+    font-size:16px;
+    border:none;
+    border-radius:6px;
+    background:#4CAF50;
+    color:white;
+    cursor:pointer;
+  }
+  button:hover { background:#45a049; }
+
+  #drawSection {
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    margin-top:20px;
+  }
+
+  #timer { margin:4px 0; font-size:1.2rem; color:#d32f2f; }
+
+  .canvas-wrapper {
+    position:relative;
+    border:1px solid #388e3c;
+    background:white;
+  }
+  canvas {
+    display:block;
+    touch-action:none;
+    max-width:90vw;
+    max-height:90vw;
+  }
+
+  #overlay {
+    position:absolute;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:white;
+    display:none;
+    justify-content:center;
+    align-items:center;
+  }
+  #overlay img {
+    max-width:100%;
+    max-height:100%;
+  }
+
+  #resetBtn {
+    margin-top:10px;
+    background:#e74c3c;
+  }
+
+  .note {
+    display:none;
+    margin-top:8px;
+    font-size:14px;
+    color:#333;
+    text-align:center;
+    padding:0 24px;
+  }
 </style>
 </head>
 <body>
+
   <div class="header-msg" id="awayMsg">あやの離席中..</div>
-  <div id="topic">お題：サンプル</div>
-  <!-- 以下、残りのHTMLとJSは前回のまま -->
+  <div id="topic"></div>
+
+  <div id="nicknameForm">
+    <p>ニックネームを入力してスタートしてください</p>
+    <input type="text" id="nickname" placeholder="ニックネーム">
+    <button id="startBtn">スタート</button>
+  </div>
+
+  <div id="drawSection">
+    <div id="timer">残り 30 秒</div>
+    <div class="canvas-wrapper" id="canvasWrap">
+      <canvas id="canvas"></canvas>
+      <div id="overlay"><img id="preview" alt="完成画像"></div>
+    </div>
+    <button id="resetBtn">リセット</button>
+    <p class="note" id="saveNote">
+      ★長押しすると保存できます。<br>
+      枠内アイコンの設定ができる皆さんは、良かったら一時的に枠内アイコンに設定して皆さんに見せてくださいꉂ🤭
+    </p>
+  </div>
+
+<script>
+const startBtn    = document.getElementById('startBtn');
+const nicknameForm= document.getElementById('nicknameForm');
+const drawSection = document.getElementById('drawSection');
+const canvas      = document.getElementById('canvas');
+const ctx         = canvas.getContext('2d');
+const timerEl     = document.getElementById('timer');
+const previewImg  = document.getElementById('preview');
+const saveNote    = document.getElementById('saveNote');
+const resetBtn    = document.getElementById('resetBtn');
+const awayMsg     = document.getElementById('awayMsg');
+const topicEl     = document.getElementById('topic');
+const overlay     = document.getElementById('overlay');
+const canvasWrap  = document.getElementById('canvasWrap');
+
+let drawing = false;
+let timeLeft = 30;
+let nickname = "";
+const topics = ["食パンマンが空を飛んでいる様子を描いてください"];
+
+function resizeCanvas() {
+  const size = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.6);
+  canvas.width = size;
+  canvas.height = size;
+  canvasWrap.style.width = size + "px";
+  canvasWrap.style.height = size + "px";
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+function startDraw(e){
+  drawing = true;
+  draw(e);
+}
+function endDraw(){
+  drawing = false;
+  ctx.beginPath();
+}
+function draw(e){
+  if(!drawing) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+  const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#000';
+  ctx.lineTo(x, y);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+}
+
+function drawNickname(){
+  ctx.save();
+  ctx.font = "20px sans-serif";
+  ctx.fillStyle = "#000";
+  ctx.textBaseline = "top";
+  ctx.fillText(nickname, 10, 10);
+  ctx.restore();
+}
+
+function startTimer(){
+  const timer = setInterval(()=>{
+    timeLeft--;
+    timerEl.textContent = `残り ${timeLeft} 秒`;
+    if(timeLeft <= 0){
+      clearInterval(timer);
+      timerEl.textContent = "時間終了！";
+      canvas.removeEventListener('mousedown', startDraw);
+      canvas.removeEventListener('touchstart', startDraw);
+      canvas.removeEventListener('mousemove', draw);
+      canvas.removeEventListener('touchmove', draw);
+      canvas.removeEventListener('mouseup', endDraw);
+      canvas.removeEventListener('mouseleave', endDraw);
+      canvas.removeEventListener('touchend', endDraw);
+      previewImg.src = canvas.toDataURL('image/png');
+      overlay.style.display = 'flex';
+      saveNote.style.display = 'block';
+      resetBtn.style.display = 'none';
+    }
+  },1000);
+}
+
+resetBtn.addEventListener('click',()=>{
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawNickname();
+});
+
+startBtn.addEventListener('click',()=>{
+  nickname = document.getElementById('nickname').value.trim();
+  if(!nickname) return;
+
+  nicknameForm.style.display = 'none';
+  awayMsg.style.display = 'none';
+  drawSection.style.display = 'flex';
+
+  // ★ ここでお題を表示することで必ず出る
+  const t = topics[Math.floor(Math.random()*topics.length)];
+  topicEl.textContent = `お題：${t}`;
+  topicEl.style.display = 'block';
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawNickname();
+
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('touchstart', startDraw);
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('touchmove', draw);
+  canvas.addEventListener('mouseup', endDraw);
+  canvas.addEventListener('mouseleave', endDraw);
+  canvas.addEventListener('touchend', endDraw);
+
+  startTimer();
+});
+</script>
 </body>
 </html>
