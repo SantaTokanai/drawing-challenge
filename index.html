@@ -3,236 +3,157 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Drawing Challenge</title>
+<title>お絵かきチャレンジ</title>
 <style>
   body {
-    margin: 0;
-    font-family: "Segoe UI", "Hiragino Kaku Gothic ProN", sans-serif;
-    background: #f7f7f7;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 1rem;
+    margin:0;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    background:#fafafa;
+    font-family: 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif;
   }
-
-  /* ---- 離席メッセージ ---- */
-  .away-message {
-    font-size: 1.8rem;
-    font-weight: bold;
-    background: linear-gradient(45deg, #ff7e5f, #feb47b);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    margin-bottom: 2rem;
-    letter-spacing: 1px;
-    animation: fadeBlink 3s infinite;
-  }
-  @keyframes fadeBlink {
-    0%,100% { opacity: 1; }
-    50% { opacity: 0.6; }
-  }
-
-  /* ---- ユーザー名入力画面 ---- */
-  #startScreen {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    margin-top: 4rem;
-  }
-  #startScreen p {
-    font-size: 1.2rem;
-    color: #333;
-  }
-  #startScreen input {
-    font-size: 1.2rem;
-    padding: 0.4rem 0.6rem;
-    border: 2px solid #888;
-    border-radius: 6px;
-    width: 200px;
-    text-align: center;
-  }
-  #startScreen button {
-    font-size: 1.2rem;
-    padding: 0.5rem 1.2rem;
-    background: #2575fc;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-  }
-  #startScreen button:hover {
-    background: #1250c9;
-  }
-
-  /* ---- 描画画面 ---- */
-  #drawingArea {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-  }
-
-  #topic {
-    position: relative;
-    margin: 1rem 0 1.2rem;
-    padding: 1rem 2rem;
+  h1 {
+    margin: 10px 0;
     font-size: 1.5rem;
-    font-weight: 700;
-    color: #fff;
-    text-align: center;
-    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-    border-radius: 12px;
-    box-shadow: 0 6px 14px rgba(0,0,0,0.2);
-    letter-spacing: 1px;
+    color:#444;
+    letter-spacing:1px;
   }
-  #topic::before,
-  #topic::after {
-    content: "";
-    position: absolute;
-    width: 40px;
-    height: 4px;
-    background: #fff;
-    top: 50%;
-    transform: translateY(-50%);
-    opacity: 0.8;
+  #nicknameForm {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    margin-top:20px;
   }
-  #topic::before { left: -20px; border-radius: 2px 0 0 2px; }
-  #topic::after  { right: -20px; border-radius: 0 2px 2px 0; }
-
+  input[type="text"] {
+    padding:8px 12px;
+    font-size:16px;
+    margin-bottom:10px;
+    border:1px solid #ccc;
+    border-radius:6px;
+  }
+  button {
+    padding:8px 16px;
+    font-size:16px;
+    border:none;
+    border-radius:6px;
+    background:#4CAF50;
+    color:white;
+    cursor:pointer;
+  }
+  button:hover {
+    background:#45a049;
+  }
+  #drawSection {
+    display:none;
+    flex-direction:column;
+    align-items:center;
+  }
   #timer {
-    font-size: 1.2rem;
-    margin-bottom: 1rem;
-    color: #e53935;
-    font-weight: bold;
+    margin: 12px 0;
+    font-size:1.2rem;
+    color:#555;
   }
-
-  #drawCanvas {
-    background: #fff;
-    border: 2px solid #ccc;
-    border-radius: 8px;
-    touch-action: none;
+  canvas {
+    border:1px solid #ccc;
+    background:white;
+    touch-action:none;
   }
-
   #preview {
-    margin-top: 1rem;
-    width: 320px;
-    height: 320px;
-    border: 2px solid #aaa;
-    border-radius: 8px;
-    object-fit: contain;
-    background: #fff;
-    display: none;
+    display:none;
+    max-width:90%;
+    margin-top:12px;
+    border:1px solid #ccc;
   }
-
-  p.note {
-    margin-top: 1rem;
-    font-size: 0.9rem;
-    color: #555;
-    text-align: center;
-    display: none;
+  .note {
+    display:none;
+    margin-top:8px;
+    font-size:14px;
+    color:#333;
+    text-align:center;
+  }
+  #resetBtn {
+    display:none;
+    margin-top:10px;
+    background:#e74c3c;
+  }
+  /* 上部メッセージ */
+  .header-msg {
+    margin-top:20px;
+    font-size:1.2rem;
+    font-weight:bold;
+    color:#888;
+    font-family:'Courier New', Courier, monospace;
+    letter-spacing:1px;
   }
 </style>
 </head>
 <body>
 
-<!-- ====== ユーザー名入力画面 ====== -->
-<div id="startScreen">
-  <!-- ★ 追加: オシャレな離席メッセージ -->
-  <div class="away-message">あやの離席中..</div>
+  <!-- 上部メッセージ -->
+  <div class="header-msg">あやの離席中..</div>
 
-  <p>ニックネームを入力してスタートしてください</p>
-  <input type="text" id="usernameInput" placeholder="名前を入力">
-  <button id="startBtn">スタート</button>
-</div>
+  <!-- ニックネーム入力 -->
+  <div id="nicknameForm">
+    <p>ニックネームを入力してスタートしてください</p>
+    <input type="text" id="nickname" placeholder="ニックネーム">
+    <button id="startBtn">スタート</button>
+  </div>
 
-<!-- ====== 描画画面 ====== -->
-<div id="drawingArea">
-  <h1 id="topic"></h1>
-  <div id="timer">残り 30 秒</div>
-  <canvas id="drawCanvas" width="320" height="320"></canvas>
-  <img id="preview" alt="描いた画像がここに表示されます">
-  <p class="note" id="saveNote">
-    ★長押しすると保存できます。<br>
-    良かったら一時的に枠内アイコンに設定して<br>
-    皆さんにも見せてくださいꉂ🤭
-  </p>
-</div>
+  <!-- 描画エリア -->
+  <div id="drawSection">
+    <div id="timer">残り 30 秒</div>
+    <canvas id="canvas" width="300" height="300"></canvas>
+    <button id="resetBtn">リセット</button>
+    <img id="preview" alt="完成画像">
+    <p class="note" id="saveNote">
+      ★長押しすると保存できます。<br>
+      枠内アイコンの設定ができる皆さんは<br>
+      一時的に設定して皆さんにも見せてくださいꉂ🤭
+    </p>
+  </div>
 
 <script>
-const TOPIC = "食パンマンが飛んでいる様子を描いてください";
-
-const startScreen = document.getElementById('startScreen');
-const drawingArea = document.getElementById('drawingArea');
-const startBtn = document.getElementById('startBtn');
-const usernameInput = document.getElementById('usernameInput');
-
-const topicEl = document.getElementById('topic');
-const timerEl = document.getElementById('timer');
-const canvas = document.getElementById('drawCanvas');
-const ctx = canvas.getContext('2d');
+const startBtn  = document.getElementById('startBtn');
+const nicknameForm = document.getElementById('nicknameForm');
+const drawSection  = document.getElementById('drawSection');
+const canvas   = document.getElementById('canvas');
+const ctx      = canvas.getContext('2d');
+const timerEl  = document.getElementById('timer');
 const previewImg = document.getElementById('preview');
 const saveNote = document.getElementById('saveNote');
+const resetBtn = document.getElementById('resetBtn');
 
 let drawing = false;
 let timeLeft = 30;
-ctx.lineWidth = 4;
-ctx.lineCap = "round";
-ctx.strokeStyle = "#000";
-
-startBtn.addEventListener('click', () => {
-  const name = usernameInput.value.trim();
-  if (!name) {
-    alert("名前を入力してください");
-    return;
-  }
-  startScreen.style.display = 'none';
-  drawingArea.style.display = 'flex';
-  topicEl.textContent = `お題：${TOPIC}`;
-  ctx.font = "20px 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif";
-  ctx.fillStyle = "#444";
-  ctx.fillText(name, 10, 25);
-  startTimer();
-});
-
-function getPos(e) {
-  if (e.touches) {
-    const rect = canvas.getBoundingClientRect();
-    return {
-      x: e.touches[0].clientX - rect.left,
-      y: e.touches[0].clientY - rect.top
-    };
-  } else {
-    return { x: e.offsetX, y: e.offsetY };
-  }
-}
 
 function startDraw(e) {
-  e.preventDefault();
   drawing = true;
-  const pos = getPos(e);
-  ctx.beginPath();
-  ctx.moveTo(pos.x, pos.y);
-}
-function draw(e) {
-  if (!drawing) return;
-  e.preventDefault();
-  const pos = getPos(e);
-  ctx.lineTo(pos.x, pos.y);
-  ctx.stroke();
-}
-function endDraw() {
-  drawing = false;
-  ctx.closePath();
+  resetBtn.style.display = 'inline-block'; // ★描き始めたら表示
+  draw(e);
 }
 
-canvas.addEventListener('mousedown', startDraw);
-canvas.addEventListener('touchstart', startDraw, {passive: false});
-canvas.addEventListener('mousemove', draw);
-canvas.addEventListener('touchmove', draw, {passive: false});
-canvas.addEventListener('mouseup', endDraw);
-canvas.addEventListener('mouseleave', endDraw);
-canvas.addEventListener('touchend', endDraw);
+function endDraw() {
+  drawing = false;
+  ctx.beginPath();
+  resetBtn.style.display = 'none';         // ★描き終えたら隠す
+}
+
+function draw(e) {
+  if (!drawing) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+  const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+  ctx.lineWidth = 4;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#333';
+  ctx.lineTo(x, y);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+}
 
 function startTimer() {
   const timer = setInterval(() => {
@@ -242,6 +163,7 @@ function startTimer() {
       clearInterval(timer);
       timerEl.textContent = "時間終了！";
 
+      // 描画禁止
       canvas.removeEventListener('mousedown', startDraw);
       canvas.removeEventListener('touchstart', startDraw);
       canvas.removeEventListener('mousemove', draw);
@@ -250,13 +172,36 @@ function startTimer() {
       canvas.removeEventListener('mouseleave', endDraw);
       canvas.removeEventListener('touchend', endDraw);
 
+      // 画像切り替え
       previewImg.src = canvas.toDataURL('image/png');
       previewImg.style.display = 'block';
       canvas.style.display = 'none';
       saveNote.style.display = 'block';
+      resetBtn.style.display = 'none'; // タイムアップ時も非表示
     }
   }, 1000);
 }
+
+// リセット処理
+resetBtn.addEventListener('click', () => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+});
+
+startBtn.addEventListener('click', () => {
+  if (!document.getElementById('nickname').value.trim()) return;
+  nicknameForm.style.display = 'none';
+  drawSection.style.display = 'flex';
+
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('touchstart', startDraw);
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('touchmove', draw);
+  canvas.addEventListener('mouseup', endDraw);
+  canvas.addEventListener('mouseleave', endDraw);
+  canvas.addEventListener('touchend', endDraw);
+
+  startTimer();
+});
 </script>
 </body>
 </html>
