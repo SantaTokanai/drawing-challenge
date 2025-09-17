@@ -11,7 +11,7 @@
     display:flex;
     flex-direction:column;
     align-items:center;
-    background:#fafafa;
+    background:#e8f5e9;              /* ★緑系の淡い背景 */
     font-family:'Segoe UI','Hiragino Kaku Gothic ProN',sans-serif;
   }
 
@@ -20,18 +20,18 @@
     margin-top:20px;
     font-size:1.2rem;
     font-weight:bold;
-    color:#888;
+    color:#2e7d32;                   /* 濃い緑 */
     letter-spacing:1px;
   }
 
-  /* お題のデザイン */
+  /* お題のデザイン（緑系グラデーション） */
   #topic {
     margin:20px 0;
     padding:12px 24px;
     font-size:1.5rem;
     font-weight:bold;
     color:#fff;
-    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    background: linear-gradient(135deg, #66bb6a, #43a047);
     border-radius:16px;
     box-shadow:0 4px 12px rgba(0,0,0,0.2);
     text-align:center;
@@ -43,7 +43,7 @@
     position: absolute;
     width: 50px;
     height: 4px;
-    background: #fff;
+    background: #c8e6c9;
     top: 50%;
     transform: translateY(-50%);
     opacity: 0.8;
@@ -61,7 +61,7 @@
     padding:8px 12px;
     font-size:16px;
     margin-bottom:10px;
-    border:1px solid #ccc;
+    border:1px solid #a5d6a7;
     border-radius:6px;
   }
   button {
@@ -69,11 +69,11 @@
     font-size:16px;
     border:none;
     border-radius:6px;
-    background:#4CAF50;
+    background:#4caf50;              /* 緑ボタン */
     color:white;
     cursor:pointer;
   }
-  button:hover { background:#45a049; }
+  button:hover { background:#43a047; }
 
   #drawSection {
     display:none;
@@ -81,50 +81,46 @@
     align-items:center;
     margin-top:20px;
   }
-  #timer { margin:12px 0; font-size:1.2rem; color:#555; }
+  #timer { margin:12px 0; font-size:1.2rem; color:#2e7d32; }
 
   canvas {
-    border:1px solid #ccc;
+    border:2px solid #a5d6a7;
     background:white;
     touch-action:none;
   }
 
   #resetBtn {
     margin-top:10px;
-    background:#e74c3c;
+    background:#66bb6a;
   }
 
   #preview {
     display:none;
     max-width:90%;
     margin-top:12px;
-    border:1px solid #ccc;
+    border:2px solid #a5d6a7;
   }
   .note {
     display:none;
     margin-top:8px;
     font-size:14px;
-    color:#333;
+    color:#2e7d32;
     text-align:center;
   }
 </style>
 </head>
 <body>
 
-  <!-- 上部メッセージ -->
   <div class="header-msg" id="awayMsg">あやの離席中..</div>
 
-  <!-- お題表示 -->
   <div id="topic"></div>
 
-  <!-- ニックネーム入力 -->
   <div id="nicknameForm">
     <p>ニックネームを入力してスタートしてください</p>
     <input type="text" id="nickname" placeholder="ニックネーム">
     <button id="startBtn">スタート</button>
   </div>
 
-  <!-- 描画エリア -->
   <div id="drawSection">
     <div id="timer">残り 30 秒</div>
     <canvas id="canvas" width="300" height="300"></canvas>
@@ -152,7 +148,6 @@ const topicEl  = document.getElementById('topic');
 let drawing = false;
 let timeLeft = 30;
 
-// お題リスト
 const topics = ["食パンマンが空を飛んでいる様子を描いてください"];
 
 function startDraw(e) {
@@ -171,7 +166,7 @@ function draw(e) {
 
   ctx.lineWidth = 4;
   ctx.lineCap = 'round';
-  ctx.strokeStyle = '#333';
+  ctx.strokeStyle = '#2e7d32';   // 緑系のペン
   ctx.lineTo(x, y);
   ctx.stroke();
   ctx.beginPath();
@@ -186,6 +181,7 @@ function startTimer() {
       clearInterval(timer);
       timerEl.textContent = "時間終了！";
 
+      // 描画イベントを削除
       canvas.removeEventListener('mousedown', startDraw);
       canvas.removeEventListener('touchstart', startDraw);
       canvas.removeEventListener('mousemove', draw);
@@ -193,6 +189,9 @@ function startTimer() {
       canvas.removeEventListener('mouseup', endDraw);
       canvas.removeEventListener('mouseleave', endDraw);
       canvas.removeEventListener('touchend', endDraw);
+
+      // ★リセットボタンを非表示にする
+      resetBtn.style.display = 'none';
 
       previewImg.src = canvas.toDataURL('image/png');
       previewImg.style.display = 'block';
@@ -202,7 +201,6 @@ function startTimer() {
   }, 1000);
 }
 
-// リセットボタンは常に押せる
 resetBtn.addEventListener('click', () => {
   ctx.clearRect(0,0,canvas.width,canvas.height);
 });
@@ -212,10 +210,9 @@ startBtn.addEventListener('click', () => {
   if (!name) return;
 
   nicknameForm.style.display = 'none';
-  awayMsg.style.display = 'none';               // 離席メッセージ非表示
+  awayMsg.style.display = 'none';
   drawSection.style.display = 'flex';
 
-  // ランダムお題
   const t = topics[Math.floor(Math.random() * topics.length)];
   topicEl.textContent = `お題：${t}`;
 
