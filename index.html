@@ -14,6 +14,8 @@
     align-items: center;
     padding: 1rem;
   }
+
+  /* ---- ユーザー名入力画面 ---- */
   #startScreen {
     display: flex;
     flex-direction: column;
@@ -21,7 +23,10 @@
     gap: 1rem;
     margin-top: 4rem;
   }
-  #startScreen p { font-size: 1.2rem; color: #333; }
+  #startScreen p {
+    font-size: 1.2rem;
+    color: #333;
+  }
   #startScreen input {
     font-size: 1.2rem;
     padding: 0.4rem 0.6rem;
@@ -39,13 +44,18 @@
     border-radius: 8px;
     cursor: pointer;
   }
-  #startScreen button:hover { background: #1250c9; }
+  #startScreen button:hover {
+    background: #1250c9;
+  }
+
+  /* ---- 描画画面 ---- */
   #drawingArea {
     display: none;
     flex-direction: column;
     align-items: center;
     width: 100%;
   }
+
   #topic {
     position: relative;
     margin: 1rem 0 1.2rem;
@@ -72,18 +82,21 @@
   }
   #topic::before { left: -20px; border-radius: 2px 0 0 2px; }
   #topic::after  { right: -20px; border-radius: 0 2px 2px 0; }
+
   #timer {
     font-size: 1.2rem;
     margin-bottom: 1rem;
     color: #e53935;
     font-weight: bold;
   }
+
   #drawCanvas {
     background: #fff;
     border: 2px solid #ccc;
     border-radius: 8px;
     touch-action: none;
   }
+
   #preview {
     margin-top: 1rem;
     width: 320px;
@@ -94,6 +107,7 @@
     background: #fff;
     display: none;
   }
+
   p.note {
     margin-top: 1rem;
     font-size: 0.9rem;
@@ -101,28 +115,18 @@
     text-align: center;
     display: none;
   }
-  #sendBtn {
-    display: none;
-    margin-top: 1rem;
-    font-size: 1rem;
-    padding: 0.5rem 1.2rem;
-    background: #28a745;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-  }
-  #sendBtn:hover { background: #1e7e34; }
 </style>
 </head>
 <body>
 
+<!-- ====== ユーザー名入力画面 ====== -->
 <div id="startScreen">
   <p>お名前を入力してスタートしてください</p>
   <input type="text" id="usernameInput" placeholder="名前を入力">
   <button id="startBtn">スタート</button>
 </div>
 
+<!-- ====== 描画画面 ====== -->
 <div id="drawingArea">
   <h1 id="topic"></h1>
   <div id="timer">残り 30 秒</div>
@@ -131,65 +135,91 @@
     ★描いた絵を保存したいときは、下の画像を<strong>長押し</strong>してください。
   </p>
   <img id="preview" alt="描いた画像がここに表示されます">
-  <button id="sendBtn">この画像を送信</button>
 </div>
 
-<!-- Formspree送信用 -->
-<form id="uploadForm" action="https://formspree.io/f/meolwkqw" method="POST">
-  <textarea name="imageData" id="imageData" style="display:none;"></textarea>
-</form>
-
 <script>
-const TOPIC = "食パンマンが飛んでいる様子";
+/* ===========================
+   ★ お題を変更する場所
+   =========================== */
+const TOPIC = "食パンマンが飛んでいる様子を描いてください"; // ←ここを変えればお題変更OK
+
+/* ---- 要素取得 ---- */
 const startScreen = document.getElementById('startScreen');
 const drawingArea = document.getElementById('drawingArea');
 const startBtn = document.getElementById('startBtn');
 const usernameInput = document.getElementById('usernameInput');
+
 const topicEl = document.getElementById('topic');
 const timerEl = document.getElementById('timer');
 const canvas = document.getElementById('drawCanvas');
 const ctx = canvas.getContext('2d');
 const previewImg = document.getElementById('preview');
 const saveNote = document.getElementById('saveNote');
-const sendBtn = document.getElementById('sendBtn');
-const imageData = document.getElementById('imageData');
 
 let drawing = false;
-let timeLeft = 30;
+let timeLeft = 30; // ★ 制限時間 30 秒
 ctx.lineWidth = 4;
 ctx.lineCap = "round";
 ctx.strokeStyle = "#000";
 
+/* ---- 名前入力後にスタート ---- */
 startBtn.addEventListener('click', () => {
   const name = usernameInput.value.trim();
-  if (!name) { alert("名前を入力してください"); return; }
+  if (!name) {
+    alert("名前を入力してください");
+    return;
+  }
   startScreen.style.display = 'none';
   drawingArea.style.display = 'flex';
   topicEl.textContent = `お題：${TOPIC}`;
+  // キャンバスに名前を書き込む（左上）
   ctx.font = "20px 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif";
   ctx.fillStyle = "#444";
   ctx.fillText(name, 10, 25);
   startTimer();
 });
 
+/* ---- 描画処理 ---- */
 function getPos(e) {
   if (e.touches) {
     const rect = canvas.getBoundingClientRect();
-    return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
-  } else { return { x: e.offsetX, y: e.offsetY }; }
+    return {
+      x: e.touches[0].clientX - rect.left,
+      y: e.touches[0].clientY - rect.top
+    };
+  } else {
+    return { x: e.offsetX, y: e.offsetY };
+  }
 }
-function startDraw(e) { e.preventDefault(); drawing = true; const pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }
-function draw(e) { if (!drawing) return; e.preventDefault(); const pos = getPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); }
-function endDraw() { drawing = false; ctx.closePath(); }
+
+function startDraw(e) {
+  e.preventDefault();
+  drawing = true;
+  const pos = getPos(e);
+  ctx.beginPath();
+  ctx.moveTo(pos.x, pos.y);
+}
+function draw(e) {
+  if (!drawing) return;
+  e.preventDefault();
+  const pos = getPos(e);
+  ctx.lineTo(pos.x, pos.y);
+  ctx.stroke();
+}
+function endDraw() {
+  drawing = false;
+  ctx.closePath();
+}
 
 canvas.addEventListener('mousedown', startDraw);
-canvas.addEventListener('touchstart', startDraw, {passive:false});
+canvas.addEventListener('touchstart', startDraw, {passive: false});
 canvas.addEventListener('mousemove', draw);
-canvas.addEventListener('touchmove', draw, {passive:false});
+canvas.addEventListener('touchmove', draw, {passive: false});
 canvas.addEventListener('mouseup', endDraw);
 canvas.addEventListener('mouseleave', endDraw);
 canvas.addEventListener('touchend', endDraw);
 
+/* ---- タイマー ---- */
 function startTimer() {
   const timer = setInterval(() => {
     timeLeft--;
@@ -207,23 +237,13 @@ function startTimer() {
       canvas.removeEventListener('mouseleave', endDraw);
       canvas.removeEventListener('touchend', endDraw);
 
-      // プレビュー表示
+      // 保存用画像とメッセージを表示
       previewImg.src = canvas.toDataURL('image/png');
       previewImg.style.display = 'block';
       saveNote.style.display = 'block';
-
-      // 送信ボタン表示
-      sendBtn.style.display = 'block';
     }
   }, 1000);
 }
-
-// 送信ボタン処理
-sendBtn.addEventListener('click', () => {
-  imageData.value = previewImg.src; // Base64をセット
-  document.getElementById('uploadForm').submit();
-  alert("画像を送信しました！");
-});
 </script>
 </body>
 </html>
