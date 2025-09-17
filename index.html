@@ -11,17 +11,46 @@
     display:flex;
     flex-direction:column;
     align-items:center;
-    justify-content:flex-start;
     background:#fafafa;
     font-family:'Segoe UI','Hiragino Kaku Gothic ProN',sans-serif;
   }
-  .header-msg, #topic {
+
+  /* 上部離席メッセージ */
+  .header-msg {
     margin-top:20px;
     font-size:1.2rem;
     font-weight:bold;
-    color:#555;
+    color:#888;
     letter-spacing:1px;
   }
+
+  /* お題のデザイン */
+  #topic {
+    margin:20px 0;
+    padding:12px 24px;
+    font-size:1.5rem;
+    font-weight:bold;
+    color:#fff;
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    border-radius:16px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.2);
+    text-align:center;
+    position: relative;
+  }
+  #topic::before,
+  #topic::after {
+    content: "";
+    position: absolute;
+    width: 50px;
+    height: 4px;
+    background: #fff;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.8;
+  }
+  #topic::before { left: -25px; border-radius:2px 0 0 2px; }
+  #topic::after  { right: -25px; border-radius:0 2px 2px 0; }
+
   #nicknameForm {
     display:flex;
     flex-direction:column;
@@ -45,6 +74,7 @@
     cursor:pointer;
   }
   button:hover { background:#45a049; }
+
   #drawSection {
     display:none;
     flex-direction:column;
@@ -52,11 +82,18 @@
     margin-top:20px;
   }
   #timer { margin:12px 0; font-size:1.2rem; color:#555; }
+
   canvas {
     border:1px solid #ccc;
     background:white;
     touch-action:none;
   }
+
+  #resetBtn {
+    margin-top:10px;
+    background:#e74c3c;
+  }
+
   #preview {
     display:none;
     max-width:90%;
@@ -70,18 +107,14 @@
     color:#333;
     text-align:center;
   }
-  #resetBtn {
-    display:none;
-    margin-top:10px;
-    background:#e74c3c;
-  }
 </style>
 </head>
 <body>
 
-  <!-- 上部メッセージ（離席中）-->
+  <!-- 上部メッセージ -->
   <div class="header-msg" id="awayMsg">あやの離席中..</div>
-  <!-- お題表示用 -->
+
+  <!-- お題表示 -->
   <div id="topic"></div>
 
   <!-- ニックネーム入力 -->
@@ -99,8 +132,7 @@
     <img id="preview" alt="完成画像">
     <p class="note" id="saveNote">
       ★長押しすると保存できます。<br>
-      枠内アイコンが設定できる皆さまは<br>
-      一時的に設定して皆さんにも見せてくださいꉂ🤭
+      良かったら枠内アイコンに設定して皆さんにも見せてください。
     </p>
   </div>
 
@@ -120,24 +152,23 @@ const topicEl  = document.getElementById('topic');
 let drawing = false;
 let timeLeft = 30;
 
-// お題リスト（好きに追加可）
-const topics = ["食パンマンが空を飛んでいる様子を描いてください"];
+// お題リスト
+const topics = ["好きな動物を描いて！","朝ごはんを描こう","秋の風景","お気に入りのキャラクター"];
 
 function startDraw(e) {
   drawing = true;
-  resetBtn.style.display = 'inline-block';
   draw(e);
 }
 function endDraw() {
   drawing = false;
   ctx.beginPath();
-  resetBtn.style.display = 'none';
 }
 function draw(e) {
   if (!drawing) return;
   const rect = canvas.getBoundingClientRect();
   const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
   const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+
   ctx.lineWidth = 4;
   ctx.lineCap = 'round';
   ctx.strokeStyle = '#333';
@@ -154,7 +185,7 @@ function startTimer() {
     if (timeLeft <= 0) {
       clearInterval(timer);
       timerEl.textContent = "時間終了！";
-      // 描画禁止
+
       canvas.removeEventListener('mousedown', startDraw);
       canvas.removeEventListener('touchstart', startDraw);
       canvas.removeEventListener('mousemove', draw);
@@ -162,18 +193,18 @@ function startTimer() {
       canvas.removeEventListener('mouseup', endDraw);
       canvas.removeEventListener('mouseleave', endDraw);
       canvas.removeEventListener('touchend', endDraw);
-      // 画像切り替え
+
       previewImg.src = canvas.toDataURL('image/png');
       previewImg.style.display = 'block';
       canvas.style.display = 'none';
       saveNote.style.display = 'block';
-      resetBtn.style.display = 'none';
     }
   }, 1000);
 }
 
+// リセットボタンは常に押せる
 resetBtn.addEventListener('click', () => {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
 });
 
 startBtn.addEventListener('click', () => {
@@ -181,10 +212,10 @@ startBtn.addEventListener('click', () => {
   if (!name) return;
 
   nicknameForm.style.display = 'none';
-  awayMsg.style.display = 'none';               // ← 離席中メッセージを非表示
+  awayMsg.style.display = 'none';               // 離席メッセージ非表示
   drawSection.style.display = 'flex';
 
-  // ランダムお題を表示
+  // ランダムお題
   const t = topics[Math.floor(Math.random() * topics.length)];
   topicEl.textContent = `お題：${t}`;
 
