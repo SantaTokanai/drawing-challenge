@@ -15,6 +15,23 @@
     padding: 1rem;
   }
 
+  /* ---- 離席メッセージ ---- */
+  .away-message {
+    font-size: 1.8rem;
+    font-weight: bold;
+    background: linear-gradient(45deg, #ff7e5f, #feb47b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    margin-bottom: 2rem;
+    letter-spacing: 1px;
+    animation: fadeBlink 3s infinite;
+  }
+  @keyframes fadeBlink {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
   /* ---- ユーザー名入力画面 ---- */
   #startScreen {
     display: flex;
@@ -121,6 +138,9 @@
 
 <!-- ====== ユーザー名入力画面 ====== -->
 <div id="startScreen">
+  <!-- ★ 追加: オシャレな離席メッセージ -->
+  <div class="away-message">あやの離席中..</div>
+
   <p>ニックネームを入力してスタートしてください</p>
   <input type="text" id="usernameInput" placeholder="名前を入力">
   <button id="startBtn">スタート</button>
@@ -134,17 +154,13 @@
   <img id="preview" alt="描いた画像がここに表示されます">
   <p class="note" id="saveNote">
     ★長押しすると保存できます。<br>
-    良かったら枠内アイコンに設定して皆さんにも見せてくださいꉂ🤭
+    良かったら枠内アイコンに設定して皆さんにも見せてください。
   </p>
 </div>
 
 <script>
-/* ===========================
-   ★ お題を変更する場所
-   =========================== */
-const TOPIC = "食パンマンが飛んでいる様子を描いてください"; // ←ここを変えればお題変更OK
+const TOPIC = "食パンマンが飛んでいる様子を描いてください";
 
-/* ---- 要素取得 ---- */
 const startScreen = document.getElementById('startScreen');
 const drawingArea = document.getElementById('drawingArea');
 const startBtn = document.getElementById('startBtn');
@@ -158,12 +174,11 @@ const previewImg = document.getElementById('preview');
 const saveNote = document.getElementById('saveNote');
 
 let drawing = false;
-let timeLeft = 30; // ★ 制限時間 30 秒
+let timeLeft = 30;
 ctx.lineWidth = 4;
 ctx.lineCap = "round";
 ctx.strokeStyle = "#000";
 
-/* ---- 名前入力後にスタート ---- */
 startBtn.addEventListener('click', () => {
   const name = usernameInput.value.trim();
   if (!name) {
@@ -173,14 +188,12 @@ startBtn.addEventListener('click', () => {
   startScreen.style.display = 'none';
   drawingArea.style.display = 'flex';
   topicEl.textContent = `お題：${TOPIC}`;
-  // キャンバスに名前を書き込む（左上）
   ctx.font = "20px 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif";
   ctx.fillStyle = "#444";
   ctx.fillText(name, 10, 25);
   startTimer();
 });
 
-/* ---- 描画処理 ---- */
 function getPos(e) {
   if (e.touches) {
     const rect = canvas.getBoundingClientRect();
@@ -220,7 +233,6 @@ canvas.addEventListener('mouseup', endDraw);
 canvas.addEventListener('mouseleave', endDraw);
 canvas.addEventListener('touchend', endDraw);
 
-/* ---- タイマー ---- */
 function startTimer() {
   const timer = setInterval(() => {
     timeLeft--;
@@ -229,7 +241,6 @@ function startTimer() {
       clearInterval(timer);
       timerEl.textContent = "時間終了！";
 
-      // 描画禁止
       canvas.removeEventListener('mousedown', startDraw);
       canvas.removeEventListener('touchstart', startDraw);
       canvas.removeEventListener('mousemove', draw);
@@ -238,11 +249,10 @@ function startTimer() {
       canvas.removeEventListener('mouseleave', endDraw);
       canvas.removeEventListener('touchend', endDraw);
 
-      // ---- 画像切り替え ----
       previewImg.src = canvas.toDataURL('image/png');
       previewImg.style.display = 'block';
-      canvas.style.display = 'none';     // ★キャンバスを隠す
-      saveNote.style.display = 'block';  // ★メッセージを表示
+      canvas.style.display = 'none';
+      saveNote.style.display = 'block';
     }
   }, 1000);
 }
