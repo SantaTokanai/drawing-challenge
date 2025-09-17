@@ -11,14 +11,15 @@
     display:flex;
     flex-direction:column;
     align-items:center;
-    justify-content:center;
+    justify-content:flex-start;
     background:#fafafa;
-    font-family: 'Segoe UI', 'Hiragino Kaku Gothic ProN', sans-serif;
+    font-family:'Segoe UI','Hiragino Kaku Gothic ProN',sans-serif;
   }
-  h1 {
-    margin: 10px 0;
-    font-size: 1.5rem;
-    color:#444;
+  .header-msg, #topic {
+    margin-top:20px;
+    font-size:1.2rem;
+    font-weight:bold;
+    color:#555;
     letter-spacing:1px;
   }
   #nicknameForm {
@@ -43,19 +44,14 @@
     color:white;
     cursor:pointer;
   }
-  button:hover {
-    background:#45a049;
-  }
+  button:hover { background:#45a049; }
   #drawSection {
     display:none;
     flex-direction:column;
     align-items:center;
+    margin-top:20px;
   }
-  #timer {
-    margin: 12px 0;
-    font-size:1.2rem;
-    color:#555;
-  }
+  #timer { margin:12px 0; font-size:1.2rem; color:#555; }
   canvas {
     border:1px solid #ccc;
     background:white;
@@ -79,21 +75,14 @@
     margin-top:10px;
     background:#e74c3c;
   }
-  /* 上部メッセージ */
-  .header-msg {
-    margin-top:20px;
-    font-size:1.2rem;
-    font-weight:bold;
-    color:#888;
-    font-family:'Courier New', Courier, monospace;
-    letter-spacing:1px;
-  }
 </style>
 </head>
 <body>
 
-  <!-- 上部メッセージ -->
-  <div class="header-msg">あやの離席中..</div>
+  <!-- 上部メッセージ（離席中）-->
+  <div class="header-msg" id="awayMsg">あやの離席中..</div>
+  <!-- お題表示用 -->
+  <div id="topic"></div>
 
   <!-- ニックネーム入力 -->
   <div id="nicknameForm">
@@ -110,7 +99,7 @@
     <img id="preview" alt="完成画像">
     <p class="note" id="saveNote">
       ★長押しすると保存できます。<br>
-      枠内アイコンの設定ができる皆さんは<br>
+      枠内アイコンが設定できる皆さまは<br>
       一時的に設定して皆さんにも見せてくださいꉂ🤭
     </p>
   </div>
@@ -125,22 +114,25 @@ const timerEl  = document.getElementById('timer');
 const previewImg = document.getElementById('preview');
 const saveNote = document.getElementById('saveNote');
 const resetBtn = document.getElementById('resetBtn');
+const awayMsg  = document.getElementById('awayMsg');
+const topicEl  = document.getElementById('topic');
 
 let drawing = false;
 let timeLeft = 30;
 
+// お題リスト（好きに追加可）
+const topics = ["食パンマンが空を飛んでいる様子を描いてください"];
+
 function startDraw(e) {
   drawing = true;
-  resetBtn.style.display = 'inline-block'; // ★描き始めたら表示
+  resetBtn.style.display = 'inline-block';
   draw(e);
 }
-
 function endDraw() {
   drawing = false;
   ctx.beginPath();
-  resetBtn.style.display = 'none';         // ★描き終えたら隠す
+  resetBtn.style.display = 'none';
 }
-
 function draw(e) {
   if (!drawing) return;
   const rect = canvas.getBoundingClientRect();
@@ -162,7 +154,6 @@ function startTimer() {
     if (timeLeft <= 0) {
       clearInterval(timer);
       timerEl.textContent = "時間終了！";
-
       // 描画禁止
       canvas.removeEventListener('mousedown', startDraw);
       canvas.removeEventListener('touchstart', startDraw);
@@ -171,26 +162,31 @@ function startTimer() {
       canvas.removeEventListener('mouseup', endDraw);
       canvas.removeEventListener('mouseleave', endDraw);
       canvas.removeEventListener('touchend', endDraw);
-
       // 画像切り替え
       previewImg.src = canvas.toDataURL('image/png');
       previewImg.style.display = 'block';
       canvas.style.display = 'none';
       saveNote.style.display = 'block';
-      resetBtn.style.display = 'none'; // タイムアップ時も非表示
+      resetBtn.style.display = 'none';
     }
   }, 1000);
 }
 
-// リセット処理
 resetBtn.addEventListener('click', () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 });
 
 startBtn.addEventListener('click', () => {
-  if (!document.getElementById('nickname').value.trim()) return;
+  const name = document.getElementById('nickname').value.trim();
+  if (!name) return;
+
   nicknameForm.style.display = 'none';
+  awayMsg.style.display = 'none';               // ← 離席中メッセージを非表示
   drawSection.style.display = 'flex';
+
+  // ランダムお題を表示
+  const t = topics[Math.floor(Math.random() * topics.length)];
+  topicEl.textContent = `お題：${t}`;
 
   canvas.addEventListener('mousedown', startDraw);
   canvas.addEventListener('touchstart', startDraw);
