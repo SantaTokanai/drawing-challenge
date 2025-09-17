@@ -22,14 +22,14 @@
     color:#2e7d32;
   }
 
-  /* ★ お題枠：可愛らしいデザイン ★ */
+  /* お題枠：可愛らしいデザイン */
   #topic {
-    display:none;                 /* ← 初期は非表示 */
+    display:none;
     margin:10px 0 4px;
     padding:16px 28px;
-    font-size:1.5rem;
+    font-size:1.3rem;  /* 少し小さく */
     font-weight:bold;
-    color:#444;                   /* はっきり見える文字色 */
+    color:#444;
     background:
       radial-gradient(circle at 10px 10px, rgba(255,255,255,0.6) 1px, transparent 1px),
       radial-gradient(circle at 30px 30px, rgba(255,255,255,0.6) 1px, transparent 1px),
@@ -173,6 +173,7 @@ let timeLeft = 30;
 let nickname = "";
 const topics = ["食パンマンが空を飛んでいる様子を描いてください"];
 
+// キャンバスサイズ
 function resizeCanvas() {
   const size = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.6);
   canvas.width = size;
@@ -182,6 +183,15 @@ function resizeCanvas() {
 }
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
+
+function drawNickname(){
+  ctx.save();
+  ctx.font = "20px sans-serif";
+  ctx.fillStyle = "#000";
+  ctx.textBaseline = "top";
+  ctx.fillText(nickname, 10, 10);
+  ctx.restore();
+}
 
 function startDraw(e){
   drawing = true;
@@ -203,15 +213,7 @@ function draw(e){
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(x, y);
-}
-
-function drawNickname(){
-  ctx.save();
-  ctx.font = "20px sans-serif";
-  ctx.fillStyle = "#000";
-  ctx.textBaseline = "top";
-  ctx.fillText(nickname, 10, 10);
-  ctx.restore();
+  drawNickname(); // ★ 常に表示
 }
 
 function startTimer(){
@@ -249,7 +251,6 @@ startBtn.addEventListener('click',()=>{
   awayMsg.style.display = 'none';
   drawSection.style.display = 'flex';
 
-  // ★ ここでお題を表示することで必ず出る
   const t = topics[Math.floor(Math.random()*topics.length)];
   topicEl.textContent = `お題：${t}`;
   topicEl.style.display = 'block';
