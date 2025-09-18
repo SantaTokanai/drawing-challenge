@@ -22,12 +22,11 @@
     color:#2e7d32;
   }
 
-  /* お題枠：可愛らしいデザイン */
+  /* お題枠：可愛らしいデザイン・左詰め */
   #topic {
     display:none;
     margin:10px 0 4px;
     padding:16px 28px;
-    font-size:1.3rem;  /* 少し小さく */
     font-weight:bold;
     color:#444;
     background:
@@ -37,9 +36,10 @@
     background-size:40px 40px,40px 40px,100% 100%;
     border-radius:24px;
     box-shadow:0 6px 14px rgba(0,0,0,0.15);
-    text-align:center;
+    text-align:left;       /* 左詰め */
     position: relative;
     border: 3px dotted #fff;
+    line-height:1.4;
   }
   #topic::before,
   #topic::after {
@@ -54,6 +54,15 @@
   }
   #topic::before { left: -25px; }
   #topic::after  { right: -25px; }
+
+  #topic .label {
+    font-size:1rem;      /* 「お題：」だけ小さく */
+    display:block;
+  }
+  #topic .text {
+    font-size:1.3rem;    /* お題本文は少し大きめ */
+    display:block;
+  }
 
   #nicknameForm {
     display:flex;
@@ -252,7 +261,7 @@ startBtn.addEventListener('click',()=>{
   drawSection.style.display = 'flex';
 
   const t = topics[Math.floor(Math.random()*topics.length)];
-  topicEl.textContent = `お題：${t}`;
+  topicEl.innerHTML = `<span class="label">お題：</span><span class="text">${t}</span>`;
   topicEl.style.display = 'block';
 
   ctx.clearRect(0,0,canvas.width,canvas.height);
