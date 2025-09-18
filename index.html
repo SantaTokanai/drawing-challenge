@@ -153,6 +153,7 @@
     <div id="timer">残り 30 秒</div>
     <div class="canvas-wrapper" id="canvasWrap">
       <canvas id="canvas"></canvas>
+      <canvas id="nameCanvas" style="position:absolute; top:0; left:0;"></canvas>
       <div id="overlay"><img id="preview" alt="完成画像"></div>
     </div>
     <button id="resetBtn">リセット</button>
@@ -167,7 +168,9 @@ const startBtn    = document.getElementById('startBtn');
 const nicknameForm= document.getElementById('nicknameForm');
 const drawSection = document.getElementById('drawSection');
 const canvas      = document.getElementById('canvas');
+const nameCanvas  = document.getElementById('nameCanvas');
 const ctx         = canvas.getContext('2d');
+const nameCtx     = nameCanvas.getContext('2d');
 const timerEl     = document.getElementById('timer');
 const previewImg  = document.getElementById('preview');
 const saveNote    = document.getElementById('saveNote');
@@ -187,29 +190,26 @@ function resizeCanvas() {
   const size = Math.min(window.innerWidth * 0.9, window.innerHeight * 0.6);
   canvas.width = size;
   canvas.height = size;
+  nameCanvas.width = size;
+  nameCanvas.height = size;
   canvasWrap.style.width = size + "px";
   canvasWrap.style.height = size + "px";
 }
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
+// ニックネームを上位キャンバスに描画
 function drawNickname(){
-  ctx.save();
-  ctx.font = "20px sans-serif";
-  ctx.fillStyle = "#000";
-  ctx.textBaseline = "top";
-  ctx.fillText(nickname, 10, 10);
-  ctx.restore();
+  nameCtx.clearRect(0,0,nameCanvas.width,nameCanvas.height);
+  nameCtx.font = "20px sans-serif";
+  nameCtx.fillStyle = "#000";
+  nameCtx.textBaseline = "top";
+  nameCtx.fillText(nickname, 10, 10);
 }
 
-function startDraw(e){
-  drawing = true;
-  draw(e);
-}
-function endDraw(){
-  drawing = false;
-  ctx.beginPath();
-}
+function startDraw(e){ drawing = true; draw(e); }
+function endDraw(){ drawing = false; ctx.beginPath(); }
+
 function draw(e){
   if(!drawing) return;
   const rect = canvas.getBoundingClientRect();
@@ -222,7 +222,7 @@ function draw(e){
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(x, y);
-  drawNickname(); // ★ 常に表示
+  // ★ ニックネームは上位キャンバスに固定されているので再描画不要
 }
 
 function startTimer(){
