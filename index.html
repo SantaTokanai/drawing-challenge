@@ -63,6 +63,7 @@
     display:block;
   }
 
+  /* ニックネーム入力フォームは残してあるけど初期表示は非表示にしています */
   #nicknameForm {
     display:flex;
     flex-direction:column;
@@ -148,7 +149,9 @@
 <div class="header-msg" id="awayMsg">あやの離席中..</div>
 <div id="topic"></div>
 
-<div id="nicknameForm">
+<!-- フォームは残す（将来ニックネームを復活させたいときのため）だが
+     JS 側で初期表示を非表示にして、自動開始する設計にしています -->
+<div id="nicknameForm" aria-hidden="true" style="display:none;">
   <p>ニックネームを入力してスタートしてください</p>
   <input type="text" id="nickname" placeholder="ニックネーム">
   <button id="startBtn">スタート</button>
@@ -187,7 +190,9 @@ const canvasWrap  = document.getElementById('canvasWrap');
 
 let drawing = false;
 let timeLeft = 30;
-let nickname = "";
+let timerId = null;
+let listenersAdded = false;
+let nickname = ""; // ニックネームは不要にするため空文字をデフォルト
 const topics = ["食パンマンが空を飛んでいる様子を描いてください"];
 
 function resizeCanvas() {
@@ -202,8 +207,14 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
+/* 名前表示は nickname が空なら非表示にする（入力をやめたい要望に合わせる） */
 function drawNickname(){
   nameCtx.clearRect(0,0,nameCanvas.width,nameCanvas.height);
+  if(!nickname){
+    nameCanvas.style.display = 'none';
+    return;
+  }
+  nameCanvas.style.display = 'block';
   nameCtx.font = "20px sans-serif";
   nameCtx.fillStyle = "#000";
   nameCtx.textBaseline = "top";
@@ -216,8 +227,9 @@ function endDraw(){ drawing = false; ctx.beginPath(); }
 function draw(e){
   if(!drawing) return;
   const rect = canvas.getBoundingClientRect();
-  const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-  const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+  const point = (e.touches && e.touches[0]) || e;
+  const x = point.clientX - rect.left;
+  const y = point.clientY - rect.top;
   ctx.lineWidth = 3;
   ctx.lineCap = 'round';
   ctx.strokeStyle = '#000';
@@ -227,13 +239,19 @@ function draw(e){
   ctx.moveTo(x,y);
 }
 
+/* タイマーは多重に走らないようにガード（timerId）を追加 */
 function startTimer(){
-  const timer = setInterval(()=>{
+  if(timerId) return;
+  // timeLeft は startSession() でリセットされる
+  timerEl.textContent = `残り ${timeLeft} 秒`;
+  timerId = setInterval(()=>{
     timeLeft--;
     timerEl.textContent = `残り ${timeLeft} 秒`;
     if(timeLeft <= 0){
-      clearInterval(timer);
+      clearInterval(timerId);
+      timerId = null;
       timerEl.textContent = "時間終了！";
+      // 描画イベントを無効化
       canvas.removeEventListener('mousedown', startDraw);
       canvas.removeEventListener('touchstart', startDraw);
       canvas.removeEventListener('mousemove', draw);
@@ -249,26 +267,8 @@ function startTimer(){
   },1000);
 }
 
-resetBtn.addEventListener('click',()=>{
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  drawNickname();
-});
-
-startBtn.addEventListener('click',()=>{
-  nickname = document.getElementById('nickname').value.trim();
-  if(!nickname) return;
-
-  nicknameForm.style.display = 'none';
-  awayMsg.style.display = 'none';
-  drawSection.style.display = 'flex';
-
-  const t = topics[Math.floor(Math.random()*topics.length)];
-  topicEl.innerHTML = `<span class="label">お題：</span><span class="text">${t}</span>`;
-  topicEl.style.display = 'block';
-
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  drawNickname();
-
+/* キャンバスのイベントをまとめて登録（重複登録を避ける） */
+function addCanvasListeners(){
   canvas.addEventListener('mousedown', startDraw);
   canvas.addEventListener('touchstart', startDraw);
   canvas.addEventListener('mousemove', draw);
@@ -276,8 +276,59 @@ startBtn.addEventListener('click',()=>{
   canvas.addEventListener('mouseup', endDraw);
   canvas.addEventListener('mouseleave', endDraw);
   canvas.addEventListener('touchend', endDraw);
+}
+
+/* リセット（既存の動作を壊さないように最小限） */
+resetBtn.addEventListener('click',()=>{
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawNickname();
+});
+
+/* 既存の startBtn は将来のために残してある（ただしニックネーム必須チェックは外す） */
+startBtn.addEventListener('click',()=>{
+  // ユーザーがニックネームを入れたら採用、入れなければ空のまま（匿名）
+  nickname = document.getElementById('nickname').value.trim() || "";
+  startSession();
+});
+
+/* セッション開始処理（自動開始・手動開始ともにここを使う） */
+function startSession(){
+  // UI 表示調整
+  nicknameForm.style.display = 'none';
+  awayMsg.style.display = 'none';
+  drawSection.style.display = 'flex';
+
+  // お題表示
+  const t = topics[Math.floor(Math.random()*topics.length)];
+  topicEl.innerHTML = `<span class="label">お題：</span><span class="text">${t}</span>`;
+  topicEl.style.display = 'block';
+
+  // キャンバス初期化
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  drawNickname();
+
+  // イベント登録（１回だけ）
+  if(!listenersAdded){
+    addCanvasListeners();
+    listenersAdded = true;
+  }
+
+  // タイマーの初期化
+  timeLeft = 30;
+  // 既に overlay が見えている場合は閉じる（前回の結果が残っている場合）
+  overlay.style.display = 'none';
+  saveNote.style.display = 'none';
+  resetBtn.style.display = 'block';
 
   startTimer();
+}
+
+/* --- 自動開始 --- */
+/* ページを読み込んだらすぐにキャンバスを表示して描けるようにする */
+window.addEventListener('DOMContentLoaded', ()=>{
+  // nicknameForm を完全に隠して自動開始（要望どおり入力をやめる）
+  // すぐ描きたいだけで、ニックネームは使わない = nickname は空のまま
+  startSession();
 });
 </script>
 </body>
